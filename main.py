@@ -1,7 +1,7 @@
 import pygame
-from colors import COLORS
-from constants import DIMENSIONS
-from constants import MOUSE_BUTTONS
+from include.colors import COLORS
+from include.constants import DIMENSIONS
+from include.constants import MOUSE_BUTTONS
 
 
 def main():
