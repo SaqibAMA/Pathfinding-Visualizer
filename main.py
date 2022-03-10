@@ -1,22 +1,27 @@
 import pygame
 from colors import COLORS
 from constants import DIMENSIONS
+from constants import MOUSE_BUTTONS
 
 
 def main():
     # initial parameters
 
-    # start -> end
-    MODE = 'start'
     START_NODE = (0, 0)
+    END_NODE = (1, 1)
 
     # handling cell click
-    def handle_cell_click(cell_location):
+    def handle_cell_click(cell_location, event_btn):
+
         x, y = cell_location
 
-        if MODE == 'start':
-            nonlocal START_NODE
-            START_NODE = (j, i)
+        nonlocal START_NODE
+        nonlocal END_NODE
+
+        if event_btn == MOUSE_BUTTONS['LEFT'] and cell_location != END_NODE:
+            START_NODE = (x, y)
+        elif event_btn == MOUSE_BUTTONS['RIGHT'] and cell_location != START_NODE:
+            END_NODE = (x, y)
 
     # initialize pygame
     pygame.init()
@@ -66,23 +71,18 @@ def main():
                 for i in range(len(cells)):
                     for j in range(len(cells[0])):
                         if cells[i][j].collidepoint(event.pos):
-                            handle_cell_click((j, i))
+                            handle_cell_click((j, i), event.button)
 
         window_surface.blit(background, (0, 0))
 
         for i in range(len(cells)):
             for j in range(len(cells)):
-
-                # TODO: Replace this with get_cell_color later
-
                 if START_NODE == (j, i):
-                    pygame.draw.rect(window_surface, COLORS['OBSTACLE'], cells[i][j], border_radius=2)
+                    pygame.draw.rect(window_surface, COLORS['START'], cells[i][j], border_radius=2)
+                elif END_NODE == (j, i):
+                    pygame.draw.rect(window_surface, COLORS['END'], cells[i][j], border_radius=2)
                 else:
                     pygame.draw.rect(window_surface, COLORS['CELL'], cells[i][j], border_radius=2)
-        #
-        # for row in cells:
-        #     for cell in row:
-        #         pygame.draw.rect(window_surface, COLORS['CELL'], cell)
 
         pygame.display.flip()
         pygame.display.update()
