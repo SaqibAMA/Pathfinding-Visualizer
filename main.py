@@ -10,7 +10,7 @@ def main():
     START_NODE = (0, 0)
     END_NODE = (1, 1)
 
-    EXPLORED_NODES = [START_NODE]
+    EXPLORED_NODES = []
 
     # handling cell click
     def handle_cell_click(cell_location, event_btn):
@@ -26,24 +26,29 @@ def main():
             END_NODE = (x, y)
 
     # explore node
-    def explore_node():
+    def explore_bfs():
 
-        # nonlocal EXPLORED_NODES
-        #
-        # frontiers = [(EXPLORED_NODES[-1][0] + 1, EXPLORED_NODES[-1][1]),
-        #              (EXPLORED_NODES[-1][0], EXPLORED_NODES[-1][1] + 1),
-        #              (EXPLORED_NODES[-1][0] - 1, EXPLORED_NODES[-1][1]),
-        #              (EXPLORED_NODES[-1][0], EXPLORED_NODES[-1][1] - 1)]
-        #
-        # frontiers = [f for f in frontiers if
-        #              f[0] in range(0, DIMENSIONS['GRID_SIZE']) and f[1] in range(0, DIMENSIONS['GRID_SIZE'])]
-        #
-        # for f in frontiers:
-        #     if f not in EXPLORED_NODES:
-        #         EXPLORED_NODES.append(f)
-        #         return
+        nonlocal EXPLORED_NODES
+        node_queue = [START_NODE]
+        target_not_found = True
 
-        pass
+        while target_not_found:
+            node = node_queue[0]
+            node_queue = node_queue[1:]
+            frontiers = [
+                (node[0] + 1, node[1]),
+                (node[0], node[1] + 1),
+                (node[0] - 1, node[1]),
+                (node[0], node[1] - 1)
+            ]
+            frontiers = [f for f in frontiers if (f[0] in range(0, DIMENSIONS['GRID_SIZE']) and f[1] in range(0, DIMENSIONS['GRID_SIZE']))]
+            node_queue.extend(frontiers)
+            EXPLORED_NODES.append(node)
+
+
+
+
+
 
     # initialize pygame
     pygame.init()
@@ -111,7 +116,8 @@ def main():
         pygame.display.flip()
         pygame.display.update()
         FPS_CLOCK.tick(30)
-        explore_node()
+
+        explore_bfs()
 
 
 if __name__ == '__main__':
