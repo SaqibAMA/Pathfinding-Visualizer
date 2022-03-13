@@ -14,8 +14,8 @@ class Node:
 def main():
     # initial parameters
 
-    START_NODE = (0, 0)
-    END_NODE = (9, 9)
+    START_NODE = (1, 2)
+    END_NODE = (8, 7)
 
     EXPLORED_NODES = []
     NODE_QUEUE = deque([Node(location=START_NODE, parents=[])])
@@ -109,10 +109,14 @@ def main():
 
         if start_visualization and len(NODE_QUEUE) != 0:
 
+            # Complete BFS Implementation -- Start
+
             node = NODE_QUEUE.popleft()
 
             if node.location == END_NODE:
                 PATH = [parent.location for parent in node.parents]
+                start_visualization = False
+                continue
 
             frontiers = [
                 (node.location[0] - 1, node.location[1]),
@@ -134,7 +138,10 @@ def main():
             ]
 
             NODE_QUEUE.extend(frontiers)
+
             EXPLORED_NODES.append(node.location)
+
+            # -- BFS END
 
 
         pygame.display.flip()
