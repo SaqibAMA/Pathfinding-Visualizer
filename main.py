@@ -18,7 +18,9 @@ def main():
     END_NODE = (8, 7)
 
     EXPLORED_NODES = []
-    NODE_QUEUE = deque([Node(location=START_NODE, parents=[])])
+    NODE_QUEUE = deque([])
+
+    OBSTACLES = []
 
     PATH = []
 
@@ -78,15 +80,31 @@ def main():
             # if mouse has been clicked
             if event.type == pygame.MOUSEBUTTONDOWN:
 
-                start_visualization = True
-
-                # TODO: Replace this with a neater comprehension
-
                 # finding out which cell has been clicked
                 for i in range(len(cells)):
                     for j in range(len(cells[0])):
                         if cells[i][j].collidepoint(event.pos):
                             handle_cell_click((j, i), event.button)
+
+            if event.type == pygame.KEYDOWN:
+                # start
+                if event.key == pygame.K_s:
+                    NODE_QUEUE = deque([Node(location=START_NODE)])
+                    start_visualization = True
+
+                # reset
+                if event.key == pygame.K_r:
+                    EXPLORED_NODES = []
+                    NODE_QUEUE = deque([])
+                    OBSTACLES = []
+                    PATH = []
+
+                # obstacles
+                if event.key == pygame.K_o:
+                    for i in range(len(cells)):
+                        for j in range(len(cells[0])):
+                            if cells[i][j].collidepoint(pygame.mouse.get_pos()):
+                                OBSTACLES.append((j, i))
 
         window_surface.blit(background, (0, 0))
 
@@ -103,6 +121,9 @@ def main():
 
                 if END_NODE == (j, i):
                     pygame.draw.rect(window_surface, COLORS['END'], cells[i][j], border_radius=2)
+
+                if (j, i) in OBSTACLES:
+                    pygame.draw.rect(window_surface, COLORS['OBSTACLE'], cells[i][j], border_radius=2)
 
                 if (j, i) in PATH and (j, i) != START_NODE:
                     pygame.draw.rect(window_surface, COLORS['PATH'], cells[i][j], border_radius=2)
@@ -134,7 +155,8 @@ def main():
                 if f[0] in range(DIMENSIONS['GRID_SIZE']) and
                    f[1] in range(DIMENSIONS['GRID_SIZE']) and
                    f not in EXPLORED_NODES and
-                   Node(location=f) not in NODE_QUEUE
+                   Node(location=f) not in NODE_QUEUE and
+                   f not in OBSTACLES
             ]
 
             NODE_QUEUE.extend(frontiers)
