@@ -2,15 +2,25 @@ import pygame
 from include.colors import COLORS
 from include.constants import DIMENSIONS
 from include.constants import MOUSE_BUTTONS
+from collections import deque
 
+class Node:
+    def __init__(self, location=None, parents=[]):
+        self.location = location
+        self.parents = parents
+    def __eq__(self, other):
+        return self.location == other.location
 
 def main():
     # initial parameters
 
     START_NODE = (0, 0)
-    END_NODE = (1, 1)
+    END_NODE = (9, 9)
 
     EXPLORED_NODES = []
+    NODE_QUEUE = deque([Node(location=START_NODE, parents=[])])
+
+    PATH = []
 
     # handling cell click
     def handle_cell_click(cell_location, event_btn):
@@ -24,31 +34,6 @@ def main():
             START_NODE = (x, y)
         elif event_btn == MOUSE_BUTTONS['RIGHT'] and cell_location != START_NODE:
             END_NODE = (x, y)
-
-    # explore node
-    def explore_bfs():
-
-        nonlocal EXPLORED_NODES
-        node_queue = [START_NODE]
-        target_not_found = True
-
-        while target_not_found:
-            node = node_queue[0]
-            node_queue = node_queue[1:]
-            frontiers = [
-                (node[0] + 1, node[1]),
-                (node[0], node[1] + 1),
-                (node[0] - 1, node[1]),
-                (node[0], node[1] - 1)
-            ]
-            frontiers = [f for f in frontiers if (f[0] in range(0, DIMENSIONS['GRID_SIZE']) and f[1] in range(0, DIMENSIONS['GRID_SIZE']))]
-            node_queue.extend(frontiers)
-            EXPLORED_NODES.append(node)
-
-
-
-
-
 
     # initialize pygame
     pygame.init()
@@ -79,6 +64,7 @@ def main():
 
     # main window loop
     is_running = True
+    start_visualization = False
 
     while is_running:
 
@@ -92,6 +78,8 @@ def main():
             # if mouse has been clicked
             if event.type == pygame.MOUSEBUTTONDOWN:
 
+                start_visualization = True
+
                 # TODO: Replace this with a neater comprehension
 
                 # finding out which cell has been clicked
@@ -104,20 +92,59 @@ def main():
 
         for i in range(len(cells)):
             for j in range(len(cells)):
-                if START_NODE == (j, i):
-                    pygame.draw.rect(window_surface, COLORS['START'], cells[i][j], border_radius=2)
-                elif END_NODE == (j, i):
-                    pygame.draw.rect(window_surface, COLORS['END'], cells[i][j], border_radius=2)
-                elif (j, i) in EXPLORED_NODES:
-                    pygame.draw.rect(window_surface, COLORS['PATH'], cells[i][j], border_radius=2)
+
+                if (j, i) in EXPLORED_NODES:
+                    pygame.draw.rect(window_surface, COLORS['EXPLORE'], cells[i][j], border_radius=2)
                 else:
                     pygame.draw.rect(window_surface, COLORS['CELL'], cells[i][j], border_radius=2)
+
+                if START_NODE == (j, i):
+                    pygame.draw.rect(window_surface, COLORS['START'], cells[i][j], border_radius=2)
+
+                if END_NODE == (j, i):
+                    pygame.draw.rect(window_surface, COLORS['END'], cells[i][j], border_radius=2)
+
+                if (j, i) in PATH and (j, i) != START_NODE:
+                    pygame.draw.rect(window_surface, COLORS['PATH'], cells[i][j], border_radius=2)
+
+        if start_visualization and len(NODE_QUEUE) != 0:
+
+            node = NODE_QUEUE.popleft()
+
+            if node.location == END_NODE:
+                PATH = [parent.location for parent in node.parents]
+
+            frontiers = [
+                (node.location[0] - 1, node.location[1]),
+                (node.location[0] + 1, node.location[1]),
+                (node.location[0], node.location[1] - 1),
+                (node.location[0], node.location[1] + 1)
+            ]
+
+            parents = list(node.parents)
+            parents.append(node)
+
+            frontiers = [
+                Node(location=f, parents=parents)
+                for f in frontiers
+                if f[0] in range(DIMENSIONS['GRID_SIZE']) and
+                   f[1] in range(DIMENSIONS['GRID_SIZE']) and
+                   f not in EXPLORED_NODES and
+                   Node(location=f) not in NODE_QUEUE
+            ]
+
+            NODE_QUEUE.extend(frontiers)
+            EXPLORED_NODES.append(node.location)
+
 
         pygame.display.flip()
         pygame.display.update()
         FPS_CLOCK.tick(30)
 
-        explore_bfs()
+
+
+
+
 
 
 if __name__ == '__main__':
