@@ -99,8 +99,9 @@ def main():
                     OBSTACLES = []
                     PATH = []
 
-                # obstacles
+                # TODO(Saqib): Add obstacle logic
                 if event.key == pygame.K_o:
+                    # finding out which cell has been clicked
                     for i in range(len(cells)):
                         for j in range(len(cells[0])):
                             if cells[i][j].collidepoint(pygame.mouse.get_pos()):
