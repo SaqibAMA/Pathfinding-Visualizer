@@ -5,24 +5,34 @@ from include.constants import MOUSE_BUTTONS
 from collections import deque
 
 class Node:
-    def __init__(self, location=None, parents=[]):
+    def __init__(self, location=None, parents=[], g=0, h=0):
         self.location = location
         self.parents = parents
+        self.g = 0
+        self.h = 0
     def __eq__(self, other):
         return self.location == other.location
 
 def main():
     # initial parameters
 
+    # starting and ending nodes
     START_NODE = (1, 2)
     END_NODE = (8, 7)
 
+    # BFS/DFS -> which nodes have already been opened.
     EXPLORED_NODES = []
+    # BFS/DFS -> what nodes should be explored next.
     NODE_QUEUE = deque([])
 
+    # any nodes that are in obstacles
     OBSTACLES = []
 
+    # the computed path by the algorithms
     PATH = []
+
+    # BFS, DFS, & UCS
+    MODE = 'DFS'
 
     # handling cell click
     def handle_cell_click(cell_location, event_btn):
@@ -133,36 +143,41 @@ def main():
 
             # Complete BFS Implementation -- Start
 
-            node = NODE_QUEUE.popleft()
+            if MODE == 'BFS' or MODE == 'DFS':
 
-            if node.location == END_NODE:
-                PATH = [parent.location for parent in node.parents]
-                start_visualization = False
-                continue
+                node = NODE_QUEUE.pop()
 
-            frontiers = [
-                (node.location[0] - 1, node.location[1]),
-                (node.location[0] + 1, node.location[1]),
-                (node.location[0], node.location[1] - 1),
-                (node.location[0], node.location[1] + 1)
-            ]
+                if node.location == END_NODE:
+                    PATH = [parent.location for parent in node.parents]
+                    start_visualization = False
+                    continue
 
-            parents = list(node.parents)
-            parents.append(node)
+                frontiers = [
+                    (node.location[0] - 1, node.location[1]),
+                    (node.location[0] + 1, node.location[1]),
+                    (node.location[0], node.location[1] - 1),
+                    (node.location[0], node.location[1] + 1)
+                ]
 
-            frontiers = [
-                Node(location=f, parents=parents)
-                for f in frontiers
-                if f[0] in range(DIMENSIONS['GRID_SIZE']) and
-                   f[1] in range(DIMENSIONS['GRID_SIZE']) and
-                   f not in EXPLORED_NODES and
-                   Node(location=f) not in NODE_QUEUE and
-                   f not in OBSTACLES
-            ]
+                parents = list(node.parents)
+                parents.append(node)
 
-            NODE_QUEUE.extend(frontiers)
+                frontiers = [
+                    Node(location=f, parents=parents)
+                    for f in frontiers
+                    if f[0] in range(DIMENSIONS['GRID_SIZE']) and
+                       f[1] in range(DIMENSIONS['GRID_SIZE']) and
+                       f not in EXPLORED_NODES and
+                       Node(location=f) not in NODE_QUEUE and
+                       f not in OBSTACLES
+                ]
 
-            EXPLORED_NODES.append(node.location)
+                if MODE == 'DFS':
+                    NODE_QUEUE.extend(frontiers)
+                elif MODE == 'BFS':
+                    NODE_QUEUE.extendleft(frontiers)
+
+                EXPLORED_NODES.append(node.location)
 
             # -- BFS END
 
