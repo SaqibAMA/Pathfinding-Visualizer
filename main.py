@@ -195,6 +195,26 @@ def main():
     # initialize pygame
     pygame.init()
 
+    # fonts
+    font = {
+        'regular': pygame.font.Font('assets/Poppins-Regular.ttf', 16),
+        'bold': pygame.font.Font('assets/Poppins-Bold.ttf', 21)
+    }
+
+    # textual content
+    text_content = {
+        'app_title': font['bold'].render('Pathfinding Visualizer - Saqib Ali', True, COLORS['TEXT']),
+        'path_cost': font['regular'].render('Path Cost: 0', True, COLORS['TEXT'])
+    }
+
+    app_title_rect = text_content['app_title'].get_rect()
+    app_title_rect.top = 550
+    app_title_rect.left = 25
+
+    path_cost_rect = text_content['path_cost'].get_rect()
+    path_cost_rect.top = 25
+    path_cost_rect.left = 550
+
     # set pygame title
     pygame.display.set_caption('Pathfinding Visualizer - Saqib Ali')
 
@@ -290,6 +310,12 @@ def main():
 
         if start_visualization and len(NODE_QUEUE) != 0:
             handle_visualization()
+
+        # drawing heading
+        window_surface.blit(text_content['app_title'], app_title_rect)
+        text_content['path_cost'] = font['regular'].render('Path Cost: ' + str(len(PATH)), True, COLORS['TEXT'])
+        window_surface.blit(text_content['path_cost'], path_cost_rect)
+
 
         pygame.display.flip()
         pygame.display.update()

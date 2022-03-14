@@ -4,5 +4,6 @@ COLORS = {
     'PATH': '#F1D00A',
     'EXPLORE': '#E6D5B8',
     'START': '#1C658C',
-    'END': '#019267'
+    'END': '#019267',
+    'TEXT': '#000000'
 }
