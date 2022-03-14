@@ -46,7 +46,7 @@ def main():
     PATH = []
 
     # BFS, DFS, UCS, and A*
-    MODE = 'A*'
+    MODE = 'BFS'
 
     # handling cell click
     def handle_cell_click(cell_location, event_btn):
@@ -197,35 +197,57 @@ def main():
 
     # fonts
     font = {
-        'regular': pygame.font.Font('assets/Poppins-Regular.ttf', 16),
+        'regular': pygame.font.Font('assets/Poppins-Regular.ttf', 14),
         'bold': pygame.font.Font('assets/Poppins-Bold.ttf', 21)
     }
 
     # textual content
     text_content = {
         'app_title': font['bold'].render('Pathfinding Visualizer - Saqib Ali', True, COLORS['TEXT']),
-        'path_cost': font['regular'].render('Path Cost: 0', True, COLORS['TEXT'])
+        'path_cost': font['bold'].render('Path Cost: 0', True, COLORS['TEXT'])
     }
 
     app_title_rect = text_content['app_title'].get_rect()
-    app_title_rect.top = 550
-    app_title_rect.left = 25
+    app_title_rect.top, app_title_rect.left = (550, 25)
 
     path_cost_rect = text_content['path_cost'].get_rect()
-    path_cost_rect.top = 25
-    path_cost_rect.left = 550
+    path_cost_rect.top, path_cost_rect.left = (25, 550)
+
+    # algo buttons
+    algo_buttons = {
+        'BFS': font['bold'].render('1 - Breadth-First Search', True, COLORS['TEXT']),
+        'DFS': font['bold'].render('2 - Depth-First Search', True, COLORS['TEXT']),
+        'UCS': font['bold'].render('3 - Uniform-Cost Search', True, COLORS['TEXT']),
+        'A*': font['bold'].render('4 - A* Search', True, COLORS['TEXT']),
+    }
+
+    bfs_button_rect, dfs_button_rect, ucs_button_rect, a_star_button_rect = algo_buttons['BFS'].get_rect(), algo_buttons['DFS'].get_rect(), algo_buttons['UCS'].get_rect(), algo_buttons['A*'].get_rect()
+    bfs_button_rect.top, bfs_button_rect.left = (100, 550)
+    dfs_button_rect.top, dfs_button_rect.left = (150, 550)
+    ucs_button_rect.top, ucs_button_rect.left = (200, 550)
+    a_star_button_rect.top, a_star_button_rect.left = (250, 550)
+
+    # instructions text
+    instructions_text = {
+        'algo_select': font['regular'].render('- Press 1, 2, 3 & 4 to select the algorithm.', True, COLORS['TEXT']),
+        'start_select': font['regular'].render('- Left click on a cell to select START.', True, COLORS['TEXT']),
+        'end_select': font['regular'].render('- Right click on a cell to select END.', True, COLORS['TEXT']),
+        'start': font['regular'].render('- Press S to start the visualization.', True, COLORS['TEXT']),
+        'reset': font['regular'].render('- Press R to reset the visualization.', True, COLORS['TEXT']),
+        'obstacle': font['regular'].render('- Press O over a cell to create obstacle.', True, COLORS['TEXT'])
+    }
 
     # set pygame title
     pygame.display.set_caption('Pathfinding Visualizer - Saqib Ali')
 
     # set screen size
-    window_surface = pygame.display.set_mode((800, 600))
+    window_surface = pygame.display.set_mode((850, 600))
 
     # setting animation
     FPS_CLOCK = pygame.time.Clock()
 
     # setting background
-    background = pygame.Surface((800, 600))
+    background = pygame.Surface((850, 600))
     background.fill(pygame.Color('#FFFFFF'))
 
     # generating cells
@@ -264,6 +286,12 @@ def main():
             if event.type == pygame.KEYDOWN:
                 # start
                 if event.key == pygame.K_s:
+
+                    # reset it first
+                    EXPLORED_NODES = []
+                    NODE_QUEUE = deque([])
+                    PATH = []
+
                     if MODE == 'BFS' or MODE == 'DFS' or MODE == 'UCS':
                         NODE_QUEUE.append(Node(location=START_NODE, g=0))
                     elif MODE == 'A*':
@@ -285,6 +313,16 @@ def main():
                         for j in range(len(cells[0])):
                             if cells[i][j].collidepoint(pygame.mouse.get_pos()):
                                 OBSTACLES.append((j, i))
+
+                # handling algo buttons
+                if event.key == pygame.K_1:
+                    MODE = 'BFS'
+                if event.key == pygame.K_2:
+                    MODE = 'DFS'
+                if event.key == pygame.K_3:
+                    MODE = 'UCS'
+                if event.key == pygame.K_4:
+                    MODE = 'A*'
 
         window_surface.blit(background, (0, 0))
 
@@ -313,8 +351,27 @@ def main():
 
         # drawing heading
         window_surface.blit(text_content['app_title'], app_title_rect)
-        text_content['path_cost'] = font['regular'].render('Path Cost: ' + str(len(PATH)), True, COLORS['TEXT'])
+        text_content['path_cost'] = font['bold'].render('Path Cost: ' + str(len(PATH)), True, COLORS['END'])
         window_surface.blit(text_content['path_cost'], path_cost_rect)
+
+        # drawing buttons
+        algo_buttons['BFS'] = font['bold'].render('1 - Breadth-First Search', True,
+                                                  COLORS['TEXT'] if MODE != 'BFS' else COLORS['END'])
+        window_surface.blit(algo_buttons['BFS'], bfs_button_rect)
+        algo_buttons['DFS'] = font['bold'].render('2 - Depth-First Search', True,
+                                                  COLORS['TEXT'] if MODE != 'DFS' else COLORS['END'])
+        window_surface.blit(algo_buttons['DFS'], dfs_button_rect)
+        algo_buttons['UCS'] = font['bold'].render('3 - Uniform-Cost Search', True,
+                                                  COLORS['TEXT'] if MODE != 'UCS' else COLORS['END'])
+        window_surface.blit(algo_buttons['UCS'], ucs_button_rect)
+        algo_buttons['A*'] = font['bold'].render('4 - A* Search', True,
+                                                  COLORS['TEXT'] if MODE != 'A*' else COLORS['END'])
+        window_surface.blit(algo_buttons['A*'], a_star_button_rect)
+
+        for idx, it in enumerate(instructions_text):
+            it_rect = instructions_text[it].get_rect()
+            it_rect.top, it_rect.left = (350 + (idx * 25), 550)
+            window_surface.blit(instructions_text[it], it_rect)
 
 
         pygame.display.flip()
