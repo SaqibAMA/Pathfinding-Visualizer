@@ -34,9 +34,9 @@ def main():
     START_NODE = (1, 2)
     END_NODE = (8, 7)
 
-    # BFS/DFS -> which nodes have already been opened.
+    # BFS/DFS/A* -> which nodes have already been opened.
     EXPLORED_NODES = []
-    # BFS/DFS -> what nodes should be explored next.
+    # BFS/DFS/A* -> what nodes should be explored next.
     NODE_QUEUE = deque([])
 
     # any nodes that are in obstacles
@@ -66,6 +66,7 @@ def main():
         # manhattan distance
         # print("Returned Heuristic: ", abs(node_location[0] - END_NODE[0]) + abs(node_location[1] - END_NODE[1]))
         return abs(node_location[0] - END_NODE[0]) + abs(node_location[1] - END_NODE[1])
+        # return math.sqrt( (node_location[0] - END_NODE[0])**2 + (node_location[1] - END_NODE[1])**2 )
 
     # handling search algorithms and their visualization
     def handle_visualization():
@@ -282,6 +283,7 @@ def main():
                     for j in range(len(cells[0])):
                         if cells[i][j].collidepoint(event.pos):
                             handle_cell_click((j, i), event.button)
+                            print(a_star_heuristic((j, i)))
 
             if event.type == pygame.KEYDOWN:
                 # start
