@@ -4,14 +4,27 @@ from include.constants import DIMENSIONS
 from include.constants import MOUSE_BUTTONS
 from collections import deque
 
+
 class Node:
+
     def __init__(self, location=None, parents=[], g=0, h=0):
         self.location = location
         self.parents = parents
         self.g = 0
         self.h = 0
+
     def __eq__(self, other):
         return self.location == other.location
+
+    def __lt__(self, other):
+        return self.get_cost() < other.get_cost()
+
+    def __gt__(self, other):
+        return self.get_cost() > other.get_cost()
+
+    def get_cost(self):
+        return self.g + self.h
+
 
 def main():
     # initial parameters
@@ -32,7 +45,7 @@ def main():
     PATH = []
 
     # BFS, DFS, & UCS
-    MODE = 'DFS'
+    MODE = 'UCS'
 
     # handling cell click
     def handle_cell_click(cell_location, event_btn):
@@ -46,6 +59,95 @@ def main():
             START_NODE = (x, y)
         elif event_btn == MOUSE_BUTTONS['RIGHT'] and cell_location != START_NODE:
             END_NODE = (x, y)
+
+    # handling search algorithms and their visualization
+    def handle_visualization():
+
+        # finds all possible moves for a given
+        # position
+        def get_frontiers(node):
+            frontiers = [
+                (node.location[0] - 1, node.location[1]),
+                (node.location[0] + 1, node.location[1]),
+                (node.location[0], node.location[1] - 1),
+                (node.location[0], node.location[1] + 1)
+            ]
+            return frontiers
+
+        nonlocal start_visualization
+        nonlocal PATH
+        nonlocal EXPLORED_NODES
+
+        # Complete BFS/DFS Implementation -- Start
+
+        if MODE == 'BFS' or MODE == 'DFS':
+
+            node = NODE_QUEUE.pop()
+
+            if node.location == END_NODE:
+                PATH = [parent.location for parent in node.parents]
+                start_visualization = False
+                return
+
+            frontiers = get_frontiers(node)
+
+            parents = list(node.parents)
+            parents.append(node)
+
+            frontiers = [
+                Node(location=f, parents=parents)
+                for f in frontiers
+                if f[0] in range(DIMENSIONS['GRID_SIZE']) and
+                   f[1] in range(DIMENSIONS['GRID_SIZE']) and
+                   f not in EXPLORED_NODES and
+                   Node(location=f) not in NODE_QUEUE and
+                   f not in OBSTACLES
+            ]
+
+            if MODE == 'DFS':
+                NODE_QUEUE.extend(frontiers)
+            elif MODE == 'BFS':
+                NODE_QUEUE.extendleft(frontiers)
+
+            EXPLORED_NODES.append(node.location)
+
+        # -- BFS/DFS END
+
+        # Complete UCS -- Start
+
+        if MODE == 'UCS':
+
+            # get the minimum node
+            node = min(NODE_QUEUE, key=lambda x: x.get_cost())
+            NODE_QUEUE.remove(node)
+
+            # if it is the end node, then terminate
+            if node.location == END_NODE:
+                PATH = [parent.location for parent in node.parents]
+                start_visualization = False
+                return
+
+            frontiers = get_frontiers(node)
+
+            parents = list(node.parents)
+            parents.append(node)
+
+            frontiers = [
+                Node(location=f, parents=parents, g=node.g + 1)
+                for f in frontiers
+                if f[0] in range(DIMENSIONS['GRID_SIZE']) and
+                   f[1] in range(DIMENSIONS['GRID_SIZE']) and
+                   f not in EXPLORED_NODES and
+                   Node(location=f) not in NODE_QUEUE and
+                   f not in OBSTACLES
+            ]
+
+            NODE_QUEUE.extend(frontiers)
+            EXPLORED_NODES.append(node.location)
+            sorted(NODE_QUEUE, key=lambda x: x.get_cost())
+
+
+        # UCS -- End
 
     # initialize pygame
     pygame.init()
@@ -99,7 +201,7 @@ def main():
             if event.type == pygame.KEYDOWN:
                 # start
                 if event.key == pygame.K_s:
-                    NODE_QUEUE = deque([Node(location=START_NODE)])
+                    NODE_QUEUE.append(Node(location=START_NODE, g=0))
                     start_visualization = True
 
                 # reset
@@ -110,6 +212,7 @@ def main():
                     PATH = []
 
                 # TODO(Saqib): Add obstacle logic
+                # obstacles
                 if event.key == pygame.K_o:
                     # finding out which cell has been clicked
                     for i in range(len(cells)):
@@ -140,56 +243,11 @@ def main():
                     pygame.draw.rect(window_surface, COLORS['PATH'], cells[i][j], border_radius=2)
 
         if start_visualization and len(NODE_QUEUE) != 0:
-
-            # Complete BFS Implementation -- Start
-
-            if MODE == 'BFS' or MODE == 'DFS':
-
-                node = NODE_QUEUE.pop()
-
-                if node.location == END_NODE:
-                    PATH = [parent.location for parent in node.parents]
-                    start_visualization = False
-                    continue
-
-                frontiers = [
-                    (node.location[0] - 1, node.location[1]),
-                    (node.location[0] + 1, node.location[1]),
-                    (node.location[0], node.location[1] - 1),
-                    (node.location[0], node.location[1] + 1)
-                ]
-
-                parents = list(node.parents)
-                parents.append(node)
-
-                frontiers = [
-                    Node(location=f, parents=parents)
-                    for f in frontiers
-                    if f[0] in range(DIMENSIONS['GRID_SIZE']) and
-                       f[1] in range(DIMENSIONS['GRID_SIZE']) and
-                       f not in EXPLORED_NODES and
-                       Node(location=f) not in NODE_QUEUE and
-                       f not in OBSTACLES
-                ]
-
-                if MODE == 'DFS':
-                    NODE_QUEUE.extend(frontiers)
-                elif MODE == 'BFS':
-                    NODE_QUEUE.extendleft(frontiers)
-
-                EXPLORED_NODES.append(node.location)
-
-            # -- BFS END
-
+            handle_visualization()
 
         pygame.display.flip()
         pygame.display.update()
         FPS_CLOCK.tick(30)
-
-
-
-
-
 
 
 if __name__ == '__main__':
