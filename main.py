@@ -3,6 +3,7 @@ from include.colors import COLORS
 from include.constants import DIMENSIONS
 from include.constants import MOUSE_BUTTONS
 from collections import deque
+import math
 
 
 class Node:
@@ -10,8 +11,8 @@ class Node:
     def __init__(self, location=None, parents=[], g=0, h=0):
         self.location = location
         self.parents = parents
-        self.g = 0
-        self.h = 0
+        self.g = g
+        self.h = h
 
     def __eq__(self, other):
         return self.location == other.location
@@ -44,8 +45,8 @@ def main():
     # the computed path by the algorithms
     PATH = []
 
-    # BFS, DFS, & UCS
-    MODE = 'UCS'
+    # BFS, DFS, UCS, and A*
+    MODE = 'A*'
 
     # handling cell click
     def handle_cell_click(cell_location, event_btn):
@@ -59,6 +60,12 @@ def main():
             START_NODE = (x, y)
         elif event_btn == MOUSE_BUTTONS['RIGHT'] and cell_location != START_NODE:
             END_NODE = (x, y)
+
+    # handle a* manhattan heuristic value
+    def a_star_heuristic(node_location):
+        # manhattan distance
+        # print("Returned Heuristic: ", abs(node_location[0] - END_NODE[0]) + abs(node_location[1] - END_NODE[1]))
+        return abs(node_location[0] - END_NODE[0]) + abs(node_location[1] - END_NODE[1])
 
     # handling search algorithms and their visualization
     def handle_visualization():
@@ -144,10 +151,46 @@ def main():
 
             NODE_QUEUE.extend(frontiers)
             EXPLORED_NODES.append(node.location)
-            sorted(NODE_QUEUE, key=lambda x: x.get_cost())
-
+            # sorted(NODE_QUEUE, key=lambda x: x.get_cost())
 
         # UCS -- End
+
+
+        # Complete A* -- Start
+
+        if MODE == 'A*':
+
+            # get the minimum node
+            node = min(NODE_QUEUE, key=lambda x: x.get_cost())
+            NODE_QUEUE.remove(node)
+
+            # if it is the end node, then terminate
+            if node.location == END_NODE:
+                PATH = [parent.location for parent in node.parents]
+                start_visualization = False
+                return
+
+            frontiers = get_frontiers(node)
+
+            parents = list(node.parents)
+            parents.append(node)
+
+            frontiers = [
+                Node(location=f, parents=parents, g=node.g + 1, h=a_star_heuristic(f))
+                for f in frontiers
+                if f[0] in range(DIMENSIONS['GRID_SIZE']) and
+                   f[1] in range(DIMENSIONS['GRID_SIZE']) and
+                   f not in EXPLORED_NODES and
+                   Node(location=f) not in NODE_QUEUE and
+                   f not in OBSTACLES
+            ]
+
+            NODE_QUEUE.extend(frontiers)
+            EXPLORED_NODES.append(node.location)
+            # sorted(NODE_QUEUE, key=lambda x: x.get_cost())
+
+
+        # A* -- End
 
     # initialize pygame
     pygame.init()
@@ -201,7 +244,10 @@ def main():
             if event.type == pygame.KEYDOWN:
                 # start
                 if event.key == pygame.K_s:
-                    NODE_QUEUE.append(Node(location=START_NODE, g=0))
+                    if MODE == 'BFS' or MODE == 'DFS' or MODE == 'UCS':
+                        NODE_QUEUE.append(Node(location=START_NODE, g=0))
+                    elif MODE == 'A*':
+                        NODE_QUEUE.append(Node(location=START_NODE, g=0, h=a_star_heuristic(START_NODE)))
                     start_visualization = True
 
                 # reset
