@@ -1,8 +1,8 @@
 DIMENSIONS = {
-    'CELL_SIZE': 50,
-    'GRID_SIZE': 10,
+    'CELL_SIZE': 25,
+    'GRID_SIZE': 20,
     'GAP': 2.5,
-    'MARGIN': 50
+    'MARGIN': 25
 }
 
 MOUSE_BUTTONS = {
