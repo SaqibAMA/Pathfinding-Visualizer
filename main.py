@@ -38,6 +38,7 @@ def main():
     EXPLORED_NODES = []
     # BFS/DFS/A* -> what nodes should be explored next.
     NODE_QUEUE = deque([])
+    NODE_CLOSED = deque([])
 
     # any nodes that are in obstacles
     OBSTACLES = []
@@ -64,7 +65,6 @@ def main():
     # handle a* manhattan heuristic value
     def a_star_heuristic(node_location):
         # manhattan distance
-        # print("Returned Heuristic: ", abs(node_location[0] - END_NODE[0]) + abs(node_location[1] - END_NODE[1]))
         return abs(node_location[0] - END_NODE[0]) + abs(node_location[1] - END_NODE[1])
         # return math.sqrt( (node_location[0] - END_NODE[0])**2 + (node_location[1] - END_NODE[1])**2 )
 
@@ -162,7 +162,16 @@ def main():
         if MODE == 'A*':
 
             # get the minimum node
+
             node = min(NODE_QUEUE, key=lambda x: x.get_cost())
+
+            # it's better to use a child than to go for a parent
+            if len(NODE_CLOSED) > 0:
+                last_explored = NODE_CLOSED[-1]
+                valid_nodes = [vn for vn in NODE_QUEUE if vn.g == last_explored.g + 1 and vn.get_cost() == node.get_cost()]
+                if len(valid_nodes) > 0:
+                    node = valid_nodes[0]
+
             NODE_QUEUE.remove(node)
 
             # if it is the end node, then terminate
@@ -187,6 +196,7 @@ def main():
             ]
 
             NODE_QUEUE.extend(frontiers)
+            NODE_CLOSED.append(node)
             EXPLORED_NODES.append(node.location)
             # sorted(NODE_QUEUE, key=lambda x: x.get_cost())
 
@@ -307,7 +317,6 @@ def main():
                     OBSTACLES = []
                     PATH = []
 
-                # TODO(Saqib): Add obstacle logic
                 # obstacles
                 if event.key == pygame.K_o:
                     # finding out which cell has been clicked
