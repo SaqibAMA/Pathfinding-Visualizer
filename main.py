@@ -3,8 +3,7 @@ from include.colors import COLORS
 from include.constants import DIMENSIONS
 from include.constants import MOUSE_BUTTONS
 from collections import deque
-import math
-
+from random import random
 
 class Node:
 
@@ -245,7 +244,8 @@ def main():
         'end_select': font['regular'].render('- Right click on a cell to select END.', True, COLORS['TEXT']),
         'start': font['regular'].render('- Press S to start the visualization.', True, COLORS['TEXT']),
         'reset': font['regular'].render('- Press R to reset the visualization.', True, COLORS['TEXT']),
-        'obstacle': font['regular'].render('- Press O over a cell to create obstacle.', True, COLORS['TEXT'])
+        'obstacle': font['regular'].render('- Press O over a cell to create obstacle.', True, COLORS['TEXT']),
+        'maze': font['regular'].render('- Press M to generate a random maze.', True, COLORS['TEXT'])
     }
 
     # set pygame title
@@ -334,6 +334,15 @@ def main():
                     MODE = 'UCS'
                 if event.key == pygame.K_4:
                     MODE = 'A*'
+
+                # handling maze generation
+                if event.key == pygame.K_m:
+                    OBSTACLES = []
+                    for i in range(DIMENSIONS['GRID_SIZE']):
+                        for j in range(DIMENSIONS['GRID_SIZE']):
+                            if random() > 0.7 and (i, j) != START_NODE and (i, j) != END_NODE:
+                                OBSTACLES.append((i, j))
+
 
         window_surface.blit(background, (0, 0))
 
