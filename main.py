@@ -1,3 +1,5 @@
+# TODO: I need to composite the nodeSelectionFunction based on the algorithm and make code cleaner.
+
 import pygame
 from include.colors import COLORS
 from include.constants import DIMENSIONS
@@ -5,6 +7,7 @@ from include.constants import MOUSE_BUTTONS
 from collections import deque
 from random import random
 
+# keeps the problem node
 class Node:
 
     def __init__(self, location=None, parents=[], g=0, h=0):
@@ -45,7 +48,7 @@ def main():
     # the computed path by the algorithms
     PATH = []
 
-    # BFS, DFS, UCS, and A*
+    # BFS, DFS, UCS, Greedy, and A*
     MODE = 'BFS'
 
     # handling cell click
@@ -155,7 +158,6 @@ def main():
 
         # UCS -- End
 
-
         # Complete A* -- Start
 
         if MODE == 'A*':
@@ -167,7 +169,8 @@ def main():
             # it's better to use a child than to go for a parent
             if len(NODE_CLOSED) > 0:
                 last_explored = NODE_CLOSED[-1]
-                valid_nodes = [vn for vn in NODE_QUEUE if vn.g == last_explored.g + 1 and vn.get_cost() == node.get_cost()]
+                valid_nodes = [vn for vn in NODE_QUEUE if
+                               vn.g == last_explored.g + 1 and vn.get_cost() == node.get_cost()]
                 if len(valid_nodes) > 0:
                     node = valid_nodes[0]
 
@@ -199,8 +202,45 @@ def main():
             EXPLORED_NODES.append(node.location)
             # sorted(NODE_QUEUE, key=lambda x: x.get_cost())
 
-
         # A* -- End
+
+        # Greedy -- start
+
+        if MODE == 'Greedy':
+
+            # get the minimum node
+
+            node = min(NODE_QUEUE, key=lambda x: x.get_cost())
+
+            NODE_QUEUE.remove(node)
+
+            # if it is the end node, then terminate
+            if node.location == END_NODE:
+                PATH = [parent.location for parent in node.parents]
+                start_visualization = False
+                return
+
+            frontiers = get_frontiers(node)
+
+            parents = list(node.parents)
+            parents.append(node)
+
+            frontiers = [
+                Node(location=f, parents=parents, g=0, h=a_star_heuristic(f))
+                for f in frontiers
+                if f[0] in range(DIMENSIONS['GRID_SIZE']) and
+                   f[1] in range(DIMENSIONS['GRID_SIZE']) and
+                   f not in EXPLORED_NODES and
+                   Node(location=f) not in NODE_QUEUE and
+                   f not in OBSTACLES
+            ]
+
+            NODE_QUEUE.extend(frontiers)
+            NODE_CLOSED.append(node)
+            EXPLORED_NODES.append(node.location)
+            # sorted(NODE_QUEUE, key=lambda x: x.get_cost())
+
+        # Greedy -- End
 
     # initialize pygame
     pygame.init()
@@ -229,17 +269,29 @@ def main():
         'DFS': font['bold'].render('2 - Depth-First Search', True, COLORS['TEXT']),
         'UCS': font['bold'].render('3 - Uniform-Cost Search', True, COLORS['TEXT']),
         'A*': font['bold'].render('4 - A* Search', True, COLORS['TEXT']),
+        'Greedy': font['bold'].render('5 - Greedy Search', True, COLORS['TEXT']),
     }
 
-    bfs_button_rect, dfs_button_rect, ucs_button_rect, a_star_button_rect = algo_buttons['BFS'].get_rect(), algo_buttons['DFS'].get_rect(), algo_buttons['UCS'].get_rect(), algo_buttons['A*'].get_rect()
+    bfs_button_rect, dfs_button_rect, ucs_button_rect, a_star_button_rect, greedy_button_rect = algo_buttons[
+                                                                                                    'BFS'].get_rect(), \
+                                                                                                algo_buttons[
+                                                                                                    'DFS'].get_rect(), \
+                                                                                                algo_buttons[
+                                                                                                    'UCS'].get_rect(), \
+                                                                                                algo_buttons[
+                                                                                                    'A*'].get_rect(), \
+                                                                                                algo_buttons[
+                                                                                                    'Greedy'].get_rect()
     bfs_button_rect.top, bfs_button_rect.left = (100, 550)
     dfs_button_rect.top, dfs_button_rect.left = (150, 550)
     ucs_button_rect.top, ucs_button_rect.left = (200, 550)
     a_star_button_rect.top, a_star_button_rect.left = (250, 550)
+    greedy_button_rect.top, greedy_button_rect.left = (300, 550)
 
     # instructions text
     instructions_text = {
-        'algo_select': font['regular'].render('- Press 1, 2, 3 & 4 to select the algorithm.', True, COLORS['TEXT']),
+        'algo_select': font['regular'].render('- Press 1, 2, 3, 4, and 5 to for algorithm.', True,
+                                              COLORS['TEXT']),
         'start_select': font['regular'].render('- Left click on a cell to select START.', True, COLORS['TEXT']),
         'end_select': font['regular'].render('- Right click on a cell to select END.', True, COLORS['TEXT']),
         'start': font['regular'].render('- Press S to start the visualization.', True, COLORS['TEXT']),
@@ -306,7 +358,7 @@ def main():
 
                     if MODE == 'BFS' or MODE == 'DFS' or MODE == 'UCS':
                         NODE_QUEUE.append(Node(location=START_NODE, g=0))
-                    elif MODE == 'A*':
+                    elif MODE == 'A*' or MODE == 'Greedy':
                         NODE_QUEUE.append(Node(location=START_NODE, g=0, h=a_star_heuristic(START_NODE)))
                     start_visualization = True
 
@@ -334,6 +386,8 @@ def main():
                     MODE = 'UCS'
                 if event.key == pygame.K_4:
                     MODE = 'A*'
+                if event.key == pygame.K_5:
+                    MODE = 'Greedy'
 
                 # handling maze generation
                 if event.key == pygame.K_m:
@@ -342,7 +396,6 @@ def main():
                         for j in range(DIMENSIONS['GRID_SIZE']):
                             if random() > 0.7 and (i, j) != START_NODE and (i, j) != END_NODE:
                                 OBSTACLES.append((i, j))
-
 
         window_surface.blit(background, (0, 0))
 
@@ -385,14 +438,16 @@ def main():
                                                   COLORS['TEXT'] if MODE != 'UCS' else COLORS['END'])
         window_surface.blit(algo_buttons['UCS'], ucs_button_rect)
         algo_buttons['A*'] = font['bold'].render('4 - A* Search', True,
-                                                  COLORS['TEXT'] if MODE != 'A*' else COLORS['END'])
+                                                 COLORS['TEXT'] if MODE != 'A*' else COLORS['END'])
         window_surface.blit(algo_buttons['A*'], a_star_button_rect)
+        algo_buttons['Greedy'] = font['bold'].render('5 - Greedy Search', True,
+                                                     COLORS['TEXT'] if MODE != 'Greedy' else COLORS['END'])
+        window_surface.blit(algo_buttons['Greedy'], greedy_button_rect)
 
         for idx, it in enumerate(instructions_text):
             it_rect = instructions_text[it].get_rect()
-            it_rect.top, it_rect.left = (350 + (idx * 25), 550)
+            it_rect.top, it_rect.left = (400 + (idx * 25), 550)
             window_surface.blit(instructions_text[it], it_rect)
-
 
         pygame.display.flip()
         pygame.display.update()
