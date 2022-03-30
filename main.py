@@ -48,6 +48,17 @@ def main():
     # the computed path by the algorithms
     PATH = []
 
+    # maze file reading logic
+    # with open('maze.txt') as f:
+    #     for i, line in enumerate(f):
+    #         for j, c in enumerate(line):
+    #             if c == '#':
+    #                 OBSTACLES.append((j, i))
+    #             if c == 'S':
+    #                 START_NODE = (j, i)
+    #             if c == 'G':
+    #                 END_NODE = (j, i)
+
     # BFS, DFS, UCS, Greedy, and A*
     MODE = 'BFS'
 
